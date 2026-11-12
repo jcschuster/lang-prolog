@@ -1,0 +1,6 @@
+ops.json and builtins.json are read from a fresh swipl by gen/tables.mjs.
+
+swipl: SWI-Prolog version 10.0.2
+nixpkgs: https://github.com/NixOS/nixpkgs/tree/f4a03c008967841f2a0b3cb7c436fc6fc31671f6
+nixpkgs narHash: sha256-ziZn2PvCJE5JEEpqTdxXwJpPB+L3YqoCpTAMCzyaP3U=
+nixpkgs date: 2026-11-07

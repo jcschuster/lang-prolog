@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
+      - name: Every check
+        run: nix develop --command .github/scripts/test-all.sh
+      # `git status` also catches generated files that are new or were never committed.
+      - name: Generated files are committed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff
+            echo "Generated files are stale: run 'pnpm generate' in the devshell, then commit." >&2
+            exit 1
+          fi

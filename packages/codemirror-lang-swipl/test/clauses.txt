@@ -1,0 +1,174 @@
+# Fact
+
+parent(tom, bob).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Atom,",",Atom,")"),End))
+
+# Atom fact
+
+halt_now.
+
+==>
+
+Program(Fact(HeadFunctor(Atom),End))
+
+# Rule
+
+grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
+
+==>
+
+Program(Rule(HeadFunctor(Atom),ArgList(CallOpen,Variable,",",Variable,")"),Neck,Compound(Functor(Atom),ArgList(CallOpen,Variable,",",Variable,")")),",",Compound(Functor(Atom),ArgList(CallOpen,Variable,",",Variable,")")),End))
+
+# Directive
+
+:- dynamic counter/1.
+
+==>
+
+Program(Directive(Neck,DirectiveName,Atom,SymbolAtom,Number,End))
+
+# Query
+
+?- member(X, [1, 2]).
+
+==>
+
+Program(Directive(Neck,Compound(Functor(Atom),ArgList(CallOpen,Variable,",",List("[",Number,",",Number,"]"),")")),End))
+
+# Module-qualified heads
+
+user:portray(X) :- print(X).
+lists:(#(X)) :- true.
+
+==>
+
+Program(Rule(Atom,Colon,HeadFunctor(Atom),ArgList(CallOpen,Variable,")"),Neck,Compound(Functor(Builtin),ArgList(CallOpen,Variable,")")),End),Rule(Atom,Colon,Parenthesized("(",Compound(Functor(SymbolAtom),ArgList(CallOpen,Variable,")")),")"),Neck,Control,End))
+
+# Head that is not an atom
+
+X + Y :- true.
+
+==>
+
+Program(Rule(Variable,SymbolAtom,Variable,Neck,Control,End))
+
+# DCG rule
+
+greeting --> [hello], name, { true }, !.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,List("[",Atom,"]"),",",Builtin,",",Curly("{",Control,"}"),",","!",End))
+
+# DCG pushback
+
+a, [x] --> b.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),",",List("[",Atom,"]"),Neck,Atom,End))
+
+# Functor application needs the parenthesis right after the name
+
+x :- f(a), f (a), 'q'(b), - (1), -(1).
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Compound(Functor(Atom),ArgList(CallOpen,Atom,")")),",",Atom,Parenthesized("(",Atom,")"),",",Compound(Functor(QuotedAtom),ArgList(CallOpen,Atom,")")),",",SymbolAtom,Parenthesized("(",Number,")"),",",Compound(Functor(SymbolAtom),ArgList(CallOpen,Number,")")),End))
+
+# Lists and curly terms
+
+x([H|T], [], {a, b}, {}).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,List("[",Variable,"|",Variable,"]"),",",List("[","]"),",",Curly("{",Atom,",",Atom,"}"),",",Curly("{","}"),")"),End))
+
+# Dicts
+
+x(_{a: 1}, point{x: 1, y: 2}, X{}, 'q'{}).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Dict(Anonymous,DictOpen,Atom,Colon,Number,"}"),",",Dict(Atom,DictOpen,Atom,Colon,Number,",",Atom,Colon,Number,"}"),",",Dict(Variable,DictOpen,"}"),",",Dict(QuotedAtom,DictOpen,"}"),")"),End))
+
+# A tag followed by a space is not a dict
+
+x :- a {b}.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Atom,Curly("{",Atom,"}"),End))
+
+# Operator words
+
+x :- X is Y mod 2 rem 3 xor 4, Z = is(1, 2).
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Variable,Operator,Variable,Operator,Number,Operator,Number,Operator,Number,",",Variable,SymbolAtom,Compound(Functor(Operator),ArgList(CallOpen,Number,",",Number,")")),End))
+
+# Control constructs
+
+x :- ( a -> b ; c *-> d ; \+ e ), call(f), catch(g, _, true), fail.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Parenthesized("(",Atom,Control,Atom,";",Atom,Control,Atom,";",Control,Atom,")"),",",Compound(Functor(Control),ArgList(CallOpen,Atom,")")),",",Compound(Functor(Control),ArgList(CallOpen,Atom,",",Anonymous,",",Control,")")),",",Control,End))
+
+# Built-ins
+
+x :- format("~w", [a]), atom_length(abc, N), nl.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Compound(Functor(Builtin),ArgList(CallOpen,String,",",List("[",Atom,"]"),")")),",",Compound(Functor(Builtin),ArgList(CallOpen,Atom,",",Variable,")")),",",Builtin,End))
+
+# Directive names
+
+:- use_module(library(lists)).
+:- module(m, [p/1, op(700, xfx, ===)]).
+
+==>
+
+Program(Directive(Neck,Compound(Functor(DirectiveName),ArgList(CallOpen,Compound(Functor(Atom),ArgList(CallOpen,Atom,")")),")")),End),Directive(Neck,Compound(Functor(DirectiveName),ArgList(CallOpen,Atom,",",List("[",Atom,SymbolAtom,Number,",",Compound(Functor(DirectiveName),ArgList(CallOpen,Number,",",Atom,",",SymbolAtom,")")),"]"),")")),End))
+
+# User-defined operators stay flat
+
+:- op(700, xfx, ===).
+a === b.
+x :- X === Y, X likes Y.
+
+==>
+
+Program(Directive(Neck,Compound(Functor(DirectiveName),ArgList(CallOpen,Number,",",Atom,",",SymbolAtom,")")),End),Fact(HeadFunctor(Atom),SymbolAtom,Atom,End),Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,Variable,",",Variable,Atom,Variable,End))
+
+# Neck inside parentheses
+
+x :- assertz((a :- b)), Y = [(c :- d)].
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Compound(Functor(Builtin),ArgList(CallOpen,Parenthesized("(",Atom,Neck,Atom,")"),")")),",",Variable,SymbolAtom,List("[",Parenthesized("(",Atom,Neck,Atom,")"),"]"),End))
+
+# A missing closing parenthesis does not swallow the next clause
+
+foo(a :- b.
+bar.
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Atom,Neck,Atom,⚠),End),Fact(HeadFunctor(Atom),End))
+
+# An unclosed list does not swallow the next clause
+
+foo([a, b).
+bar.
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,List("[",Atom,",",Atom,⚠),")"),End),Fact(HeadFunctor(Atom),End))
+
