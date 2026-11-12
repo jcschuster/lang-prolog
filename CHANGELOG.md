@@ -10,6 +10,8 @@ The SWI-Prolog version the operator and built-in tables come from is recorded in
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-12
+
 ### Added
 
 - `codemirror-lang-swipl`: a CodeMirror 6 language (Lezer parser) for SWI-Prolog 7+
