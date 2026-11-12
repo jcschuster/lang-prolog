@@ -1,0 +1,97 @@
+// Token level only: operators stay flat, because programs change the operator table
+// with op/3 (see the package README).
+
+@top Program { clause* }
+
+@skip { whitespace | LineComment | BlockComment }
+
+clause { Directive | Rule | Fact }
+
+Directive { Neck items? End }
+
+Rule { head Neck items? End }
+
+Fact { head End }
+
+@precedence { qualified }
+
+head { (name !qualified Colon)? (HeadFunctor ArgList? | headStart) item* }
+
+headStart { simple | List | Curly | Parenthesized | Dict | punctuation }
+
+HeadFunctor { name }
+
+items { item+ }
+
+item { name | Compound | simple | List | Curly | Parenthesized | Dict | punctuation }
+
+nested { (item | Neck)+ }
+
+name { Atom | QuotedAtom | Operator | Control | DirectiveName | Builtin | SymbolAtom }
+
+simple { Variable | Anonymous | Number | String | BackquoteString | QuasiQuotation | "!" }
+
+punctuation { "," | ";" | "|" | Colon }
+
+Compound { Functor ArgList }
+
+Functor { name }
+
+ArgList { CallOpen nested? ")" }
+
+Parenthesized { "(" nested? ")" }
+
+List { "[" nested? "]" }
+
+Curly { "{" nested? "}" }
+
+Dict { (Variable | Anonymous | name) DictOpen nested? "}" }
+
+@external tokens prologTokens from "./tokens" {
+  BlockComment,
+  End,
+  Neck,
+  Colon,
+  Control,
+  SymbolAtom,
+  Atom,
+  Operator,
+  DirectiveName,
+  Builtin,
+  Variable,
+  Anonymous,
+  QuasiQuotation,
+  CallOpen[closedBy=")"],
+  DictOpen[closedBy="}"]
+}
+
+@tokens {
+  whitespace { $[ \t\n\r\f\v\u{a0}\u{1680}\u{2000}-\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}]+ }
+
+  LineComment { "%" ![\n]* }
+
+  QuotedAtom { "'" (![\\'] | "\\" _ | "''")* "'" }
+
+  String { '"' (![\\"] | "\\" _ | '""')* '"' }
+
+  BackquoteString { "`" (![\\`] | "\\" _ | "``")* "`" }
+
+  hex { $[0-9a-fA-F] }
+
+  group<d> { d+ ("_" $[ \t\n\r]* d+)* }
+
+  decimal { @digit+ (("_" $[ \t\n\r]* | " ") @digit+)* }
+
+  escape { "\\" ("x" hex+ "\\"? | $[0-7]+ "\\"? | "u" hex hex hex hex | "U" hex hex hex hex hex hex hex hex | _) }
+
+  Number {
+    decimal ("." @digit+ ($[eE] $[+\-]? @digit+ | "Inf" | "NaN")? | $[eE] $[+\-]? @digit+ | "r" decimal)? |
+    "0x" group<hex> | "0o" group<$[0-7]> | "0b" group<$[01]> |
+    ($[2-9] | $[12] @digit | "3" $[0-6]) "'" group<$[0-9a-zA-Z]> |
+    "0'" (escape | "''" | ![\\])
+  }
+
+  "(" ")" "[" "]" "{" "}" "," ";" "|" "!"
+}
+
+@detectDelim

@@ -1,0 +1,8 @@
+{
+  "control": ["!", ",", ";", "->", "*->", "\\+", "call", "catch", "throw", "true", "fail", "false"],
+  "directives": [
+    "discontiguous", "dynamic", "ensure_loaded", "initialization", "license", "meta_predicate",
+    "module", "module_transparent", "multifile", "op", "public", "reexport", "set_prolog_flag",
+    "table", "thread_local", "use_foreign_library", "use_module", "volatile"
+  ]
+}

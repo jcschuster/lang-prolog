@@ -1,0 +1,156 @@
+# Character codes
+
+x(0'c, 0'', 0''', 0'\n, 0' , 0'\x41\, 0'\\, 0'.).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,")"),End))
+
+# Radix, digit groups and floats
+
+x(0x1F, 0o17, 0b101, 16'FF, 36'zz, 1_000_000, 1 000 000, 1_000_ 000, 1.5e10, 2.0E-3, 1e10).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,",",Number,")"),End))
+
+# Rationals and special floats
+
+x(1r3, 1.0Inf, 1.5NaN).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Number,",",Number,",",Number,")"),End))
+
+# A dot after a number that ends the clause
+
+x :- X = 1.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,Number,End))
+
+# Not a float
+
+x :- X = 1.e3.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,Number,SymbolAtom,Atom,End))
+
+# Quoted atoms
+
+x('it''s', '\\', '\'', '\n', '\\n', 'End', 'a b').
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,QuotedAtom,",",QuotedAtom,",",QuotedAtom,",",QuotedAtom,",",QuotedAtom,",",QuotedAtom,",",QuotedAtom,")"),End))
+
+# Strings and back-quoted text
+
+x("a""b", "\"", `ab`, `a``b`).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,String,",",String,",",BackquoteString,",",BackquoteString,")"),End))
+
+# Multi-line quoted text
+
+x('a
+b').
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,QuotedAtom,")"),End))
+
+# Variables and anonymous variables
+
+x(_, _X, __, Y, _1).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Anonymous,",",Variable,",",Variable,",",Variable,",",Variable,")"),End))
+
+# Symbol atoms
+
+x(+, =.., \=, @<, $, $$., - ).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,SymbolAtom,",",SymbolAtom,",",SymbolAtom,",",SymbolAtom,",",SymbolAtom,",",SymbolAtom,",",SymbolAtom,")"),End))
+
+# A symbol atom ending in a dot
+
+x :- X = - .
+y :- X = -.
+  z.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,SymbolAtom,End),Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,SymbolAtom,Atom,End))
+
+# Dot between terms is not an end
+
+x(a.b, Y.k).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Atom,SymbolAtom,Atom,",",Variable,SymbolAtom,Atom,")"),End))
+
+# End before a line comment
+
+foo :- bar.%c
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Atom,End),LineComment)
+
+# End at end of input
+
+foo.
+
+==>
+
+Program(Fact(HeadFunctor(Atom),End))
+
+# Comments
+
+% line
+/* block */ a. /* nested /* inner */ still comment */ b.
+
+==>
+
+Program(LineComment,BlockComment,Fact(HeadFunctor(Atom),End),BlockComment,Fact(HeadFunctor(Atom),End))
+
+# Comment start inside a symbol atom
+
+x :- X = +/*c*/ y.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,SymbolAtom,Atom,SymbolAtom,Atom,End))
+
+# Solo characters
+
+x :- a, b ; c | d, !.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Atom,",",Atom,";",Atom,"|",Atom,",","!",End))
+
+# Non-ASCII names and symbols
+
+x(λ, Λ, ä, Ärger, →, ×).
+
+==>
+
+Program(Fact(HeadFunctor(Atom),ArgList(CallOpen,Atom,",",Variable,",",Atom,",",Variable,",",SymbolAtom,",",SymbolAtom,")"),End))
+
+# Quasi-quotation
+
+x :- X = {|html(Y)||<p>Y</p>|}.
+
+==>
+
+Program(Rule(HeadFunctor(Atom),Neck,Variable,SymbolAtom,QuasiQuotation,End))
+
